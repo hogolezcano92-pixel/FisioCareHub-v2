@@ -132,10 +132,6 @@
   .ping-online-dot {
     @apply relative inline-flex rounded-full h-3 w-3 bg-emerald-500;
   }
-
-  .btn-compact {
-    @apply px-4 py-2 text-sm font-bold rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2;
-  }
   
   .btn-primary-compact {
     @apply bg-[#0047AB] text-white hover:bg-[#003580] shadow-md;
