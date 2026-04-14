@@ -138,7 +138,7 @@
   }
   
   .btn-primary-compact {
-    @apply btn-compact bg-[#0047AB] text-white hover:bg-[#003580] shadow-md;
+    @apply bg-[#0047AB] text-white hover:bg-[#003580] shadow-md;
   }
 
   .input-compact {
