@@ -676,7 +676,7 @@ export default function Chat() {
                     initial={{ x: '100%', opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: '100%', opacity: 0 }}
-                    className="fixed inset-y-0 right-0 w-full sm:w-80 lg:relative lg:inset-auto lg:w-96 border-l border-slate-100 bg-white p-6 overflow-y-auto z-[60] lg:z-10 shadow-2xl lg:shadow-none"
+                    className="fixed inset-y-0 right-0 w-full sm:w-80 lg:relative lg:inset-auto lg:w-96 border-l border-slate-100 bg-white p-6 overflow-y-auto z-[40] lg:z-10 shadow-2xl lg:shadow-none"
                   >
                     <div className="flex justify-between items-center mb-6 lg:hidden">
                       <h3 className="text-lg font-black text-slate-900">Detalhes do Usuário</h3>

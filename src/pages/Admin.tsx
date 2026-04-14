@@ -851,7 +851,7 @@ export default function Admin() {
       {/* User Detail Modal */}
       <AnimatePresence>
         {selectedUserDetail && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[50] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1008,7 +1008,7 @@ export default function Admin() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[40] lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -1016,7 +1016,7 @@ export default function Admin() {
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-[70] w-64 bg-[#0B1120] border-r border-white/5 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-[45] w-64 bg-[#0B1120] border-r border-white/5 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
           !sidebarOpen ? "-translate-x-full lg:w-20" : "translate-x-0"
         )}
       >
@@ -1357,7 +1357,7 @@ export default function Admin() {
               {/* Modal Novo Material */}
               <AnimatePresence>
                 {showMaterialModal && (
-                  <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                  <div className="fixed inset-0 z-[50] flex items-center justify-center p-4">
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

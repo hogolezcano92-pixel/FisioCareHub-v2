@@ -594,7 +594,7 @@ function AppContent() {
 
         <div className="flex-1 flex flex-col min-w-0 bg-bg-general min-h-screen">
           {!showSidebar && !isAdminPage && !isWaitingPage ? <Navbar /> : (showSidebar && (
-            <header className="lg:hidden bg-slate-950/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50 px-4 sm:px-6 h-16 flex items-center justify-between pt-[env(safe-area-inset-top)] min-h-[4rem] w-full">
+            <header className="lg:hidden bg-slate-950/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-[120] px-4 sm:px-6 h-16 flex items-center justify-between pt-[env(safe-area-inset-top)] min-h-[4rem] w-full">
               <Logo variant="light" size="sm" />
               <div className="flex items-center gap-4">
                 <NotificationBell />
@@ -755,7 +755,7 @@ function AppContent() {
             initial={{ opacity: 0, scale: 0.5, x: 50 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.5, x: 50 }}
-            className="fixed bottom-28 right-6 z-[100] group"
+            className="fixed bottom-28 right-6 z-[40] group"
           >
             <div className="relative flex items-center">
               {/* Label que aparece apenas no hover */}

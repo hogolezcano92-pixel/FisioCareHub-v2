@@ -198,13 +198,13 @@ export default function HealthLibrary() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowCart(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[40]"
             />
             <motion.aside
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-white z-[70] shadow-2xl flex flex-col"
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-white z-[41] shadow-2xl flex flex-col"
             >
               <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
