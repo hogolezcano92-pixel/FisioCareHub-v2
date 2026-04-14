@@ -1,0 +1,874 @@
+/**
+ * FisioCareHub Frontend
+ * Segurança e Conexão (CORS) - Cabeçalhos para AI Studio
+ * Access-Control-Allow-Origin: *
+ */
+
+import { Routes, Route, Link, useNavigate, useLocation, BrowserRouter, Navigate } from 'react-router-dom';
+import { supabase, initSupabase } from './lib/supabase';
+import { fetchConfig } from './config/api';
+import { useState, useEffect, Component, ErrorInfo, ReactNode, useRef, lazy, Suspense } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { 
+  Activity, 
+  Crown,
+  User, 
+  FileText, 
+  BrainCircuit, 
+  LogOut, 
+  Menu, 
+  X, 
+  Home as HomeIcon,
+  LayoutDashboard,
+  Stethoscope,
+  Calendar as CalendarIcon,
+  MessageSquare,
+  MessageCircle,
+  HelpCircle,
+  Phone,
+  AlertTriangle,
+  FileSignature,
+  ShieldCheck,
+  Bell,
+  Video,
+  Loader2
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cn } from './lib/utils';
+import { Toaster, toast } from 'sonner';
+
+// i18n
+import './i18n/config';
+import { useTranslation } from 'react-i18next';
+
+// Components
+import NotificationBell from './components/NotificationBell';
+import Logo from './components/Logo';
+import SplashScreen from './components/SplashScreen';
+
+// Lazy Components
+const KineAI = lazy(() => import('./components/KineAI'));
+const Onboarding = lazy(() => import('./components/Onboarding'));
+const Sidebar = lazy(() => import('./components/Sidebar'));
+const AguardandoAprovacao = lazy(() => import('./pages/AguardandoAprovacao'));
+
+// Lazy Pages
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Triage = lazy(() => import('./pages/Triage'));
+const Records = lazy(() => import('./pages/Records'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Appointments = lazy(() => import('./pages/Appointments'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Documents = lazy(() => import('./pages/Documents'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Patients = lazy(() => import('./pages/Patients'));
+const PatientDetails = lazy(() => import('./pages/PatientDetails'));
+const Agenda = lazy(() => import('./pages/Agenda'));
+const Exercises = lazy(() => import('./pages/Exercises'));
+const PatientExercises = lazy(() => import('./pages/PatientExercises'));
+const PhysioTriages = lazy(() => import('./pages/PhysioTriages'));
+const AppPreview = lazy(() => import('./pages/AppPreview'));
+const About = lazy(() => import('./pages/About'));
+const Partner = lazy(() => import('./pages/Partner'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Subscription = lazy(() => import('./pages/Subscription'));
+const HealthLibrary = lazy(() => import('./pages/HealthLibrary'));
+const ConfirmAppointment = lazy(() => import('./pages/ConfirmAppointment'));
+const ProfessionalProfile = lazy(() => import('./pages/ProfessionalProfile'));
+
+const PageLoader = () => (
+  <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+    <Loader2 className="w-12 h-12 text-primary animate-spin" />
+    <p className="text-text-muted font-bold uppercase tracking-widest text-xs animate-pulse">Carregando...</p>
+  </div>
+);
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      let errorMessage = "Ocorreu um erro inesperado.";
+      try {
+        if (this.state.error?.message) {
+          const parsed = JSON.parse(this.state.error.message);
+          errorMessage = `Erro no Banco de Dados: ${parsed.error}`;
+        }
+      } catch {
+        errorMessage = this.state.error?.message || errorMessage;
+      }
+
+      return (
+        <div className="min-h-screen bg-bg-general flex items-center justify-center p-4 transition-colors duration-300">
+          <div className="glass-card p-12 rounded-[3rem] max-w-md w-full text-center">
+            <div className="w-24 h-24 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle size={48} />
+            </div>
+            <h2 className="text-3xl font-display font-black text-text-main mb-2 tracking-tight">Ops! Algo deu errado</h2>
+            <p className="text-xl text-text-muted mb-8 leading-relaxed">{errorMessage}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-5 bg-primary text-white rounded-full font-black text-xl hover:bg-primary-hover transition-all shadow-premium"
+            >
+              Recarregar Aplicativo
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto'
+    });
+  }, [pathname]);
+
+  return null;
+}
+
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-bg-general flex flex-col items-center justify-center space-y-4 transition-colors duration-300">
+      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-text-muted font-bold uppercase tracking-widest text-xs">Carregando Sistema...</p>
+    </div>
+  );
+}
+
+const ProtectedRoute = ({ children, allowedRoles }: { children: ReactNode, allowedRoles?: string[] }) => {
+  const { user, profile, loading } = useAuth();
+  const location = useLocation();
+
+  // If loading or profile is not yet available but user is logged in, show splash
+  if (loading || (user && !profile)) {
+    return <SplashScreen />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  const userRole = profile?.tipo_usuario;
+  const isAdmin = userRole === 'admin' || user?.email?.toLowerCase() === 'hogolezcano92@gmail.com';
+  const isApproved = profile?.status_aprovacao === 'aprovado';
+
+  // Block unapproved physiotherapists (except for profile and waiting page)
+  if (userRole === 'fisioterapeuta' && !isApproved && !isAdmin) {
+    if (location.pathname !== '/aguardando-aprovacao' && location.pathname !== '/profile') {
+      return <Navigate to="/aguardando-aprovacao" replace />;
+    }
+  }
+
+  // If approved user tries to access waiting page, send them to dashboard
+  if (location.pathname === '/aguardando-aprovacao' && (isApproved || isAdmin || userRole === 'paciente')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // If we are on a route that requires specific roles
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    if (isAdmin) return <Navigate to="/admin" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Special case: If an Admin tries to access the general dashboard, send them to /admin
+  if (location.pathname === '/dashboard' && isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // Special case: If a non-admin tries to access /admin, send them to /dashboard
+  if (location.pathname === '/admin' && !isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+function Navbar() {
+  const { user, profile, subscription, signOut } = useAuth();
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isPro = profile?.plano === 'admin' || profile?.plano === 'pro' || profile?.is_pro === true || subscription?.status === 'ativo';
+  const isApproved = profile?.status_aprovacao === 'aprovado' || profile?.tipo_usuario === 'admin' || user?.email?.toLowerCase() === 'hogolezcano92@gmail.com';
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const navItems = [
+    { name: t('nav.home'), path: user ? (profile?.tipo_usuario === 'admin' ? '/admin' : (isApproved || profile?.tipo_usuario === 'paciente' ? '/dashboard' : '/aguardando-aprovacao')) : '/', icon: HomeIcon },
+    ...(user ? [
+      ...(profile?.tipo_usuario === 'admin' || 
+          user?.email?.toLowerCase() === 'hogolezcano92@gmail.com' ? [{ name: t('nav.admin'), path: '/admin', icon: ShieldCheck }] : []),
+      
+      // Items for Physiotherapists
+      ...(profile?.tipo_usuario === 'fisioterapeuta' && profile?.tipo_usuario !== 'admin' && isApproved ? [
+        { name: t('nav.patients'), path: '/patients', icon: User },
+        { name: t('nav.agenda'), path: '/agenda', icon: CalendarIcon },
+        { name: t('nav.exercises'), path: '/exercises', icon: Activity },
+        { name: 'Triagens', path: '/physio/triages', icon: BrainCircuit },
+        { name: t('nav.records'), path: '/records', icon: FileText },
+        { name: t('nav.documents'), path: '/documents', icon: FileSignature },
+        { name: 'Assinatura', path: '/subscription', icon: Crown },
+      ] : []),
+
+      // Items for Patients
+      ...(profile?.tipo_usuario === 'paciente' ? [
+        { name: t('nav.appointments'), path: '/appointments', icon: CalendarIcon },
+        { name: t('nav.records'), path: '/records', icon: FileText },
+        { name: t('nav.documents'), path: '/documents', icon: FileSignature },
+        { name: t('nav.triage'), path: '/triage', icon: BrainCircuit },
+      ] : []),
+
+      // Common Items
+      ...(isApproved || profile?.tipo_usuario === 'paciente' ? [
+        { name: t('nav.chat'), path: '/chat', icon: MessageSquare },
+      ] : []),
+      ...(isApproved || profile?.tipo_usuario === 'paciente' || profile?.tipo_usuario === 'admin' ? [
+        { name: t('nav.profile'), path: '/profile', icon: User },
+      ] : []),
+    ] : [
+      { name: t('nav.login'), path: '/login', icon: User },
+      { name: t('nav.register'), path: '/register', icon: Stethoscope },
+    ])
+  ];
+
+  return (
+    <nav className="bg-slate-950/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to={user ? "/dashboard" : "/"} className="group">
+              <Logo variant="light" size="sm" />
+            </Link>
+          </div>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+            {navItems.map((item) => (
+              <Link
+                key={`${item.name}-${item.path}`}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-bold transition-all",
+                  location.pathname === item.path 
+                    ? "bg-primary text-white shadow-premium" 
+                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                <item.icon size={16} />
+                <span className="hidden lg:inline">{item.name}</span>
+              </Link>
+            ))}
+            {user && (
+              <div className="flex items-center gap-3 ml-3 pl-3 border-l border-white/10">
+                <Link to="/profile" className="flex items-center gap-2 group">
+                  <div className="text-right hidden lg:block">
+                    <p className="text-[13px] font-black text-white leading-none">
+                      {profile?.tipo_usuario === 'fisioterapeuta' ? (profile?.genero === 'female' ? 'Dra. ' : 'Dr. ') : ''}
+                      {(profile?.nome_completo || '').split(' ')[0]}
+                    </p>
+                    <div className="flex items-center justify-end gap-1">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{profile?.plano}</p>
+                      {isPro && (
+                        <span className="px-1 py-0.5 bg-amber-500/20 text-amber-400 text-[7px] font-black rounded-md uppercase tracking-tighter flex items-center gap-0.5">
+                          <Crown size={7} />
+                          PRO
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <img 
+                    src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} 
+                    className="w-8 h-8 rounded-lg object-cover border-2 border-white/10 shadow-sm group-hover:border-primary transition-all"
+                    alt="profile"
+                  />
+                </Link>
+                <NotificationBell />
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                  title={t('nav.logout')}
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center gap-2">
+            {user && <NotificationBell />}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-white hover:text-primary p-2"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Nav */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-b border-slate-200 overflow-hidden"
+          >
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {navItems.map((item) => (
+                <Link
+                  key={`${item.name}-${item.path}`}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-black transition-all",
+                    location.pathname === item.path 
+                      ? "bg-sky-500 text-white" 
+                      : "text-[#1A202C] hover:bg-sky-50 hover:text-sky-600"
+                  )}
+                >
+                  <item.icon size={20} />
+                  {item.name}
+                </Link>
+              ))}
+              {user && (
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-base font-black text-red-600 hover:bg-red-50 transition-all"
+                >
+                  <LogOut size={20} />
+                  {t('nav.logout')}
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
+}
+
+function NotificationHandler() {
+  const { user } = useAuth();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+    
+    const timer = setTimeout(() => {
+      isInitialLoad.current = false;
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const playSound = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.error("Erro ao tocar som de notificação:", e));
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchLatestNotification = async () => {
+      const { data, error } = await supabase
+        .from('notificacoes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('lida', false)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Erro ao buscar notificações:", error);
+        return;
+      }
+
+      if (!isInitialLoad.current && data && data.length > 0) {
+        const notification = data[0];
+        const createdAt = new Date(notification.created_at).getTime();
+        
+        if (Date.now() - createdAt < 10000) {
+          playSound();
+          toast.info(notification.titulo, {
+            description: notification.mensagem,
+            action: notification.link ? {
+              label: "Ver",
+              onClick: () => window.location.href = notification.link
+            } : undefined
+          });
+        }
+      }
+    };
+
+    const channel = supabase
+      .channel(`notificacoes_${user.id}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'notificacoes',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('[Realtime] Global notification received:', payload);
+        if (!isInitialLoad.current) {
+          const notification = payload.new;
+          playSound();
+          toast.info(notification.titulo, {
+            description: notification.mensagem,
+            action: notification.link ? {
+              label: "Ver",
+              onClick: () => window.location.href = notification.link
+            } : undefined
+          });
+        }
+      })
+      .subscribe((status) => {
+        console.log('[Realtime] Global notification subscription status:', status);
+      });
+
+    // Listener Global para Agendamentos (Realtime)
+    const appointmentsChannel = supabase
+      .channel(`agendamentos_realtime_${user.id}`)
+      // Escuta novos agendamentos onde o usuário é o fisioterapeuta
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'agendamentos',
+        filter: `fisio_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('[Realtime] New appointment (as physio):', payload);
+        if (!isInitialLoad.current) {
+          playSound();
+          toast.success("Novo Agendamento", {
+            description: "Você recebeu uma nova solicitação de consulta."
+          });
+        }
+      })
+      // Escuta novos agendamentos onde o usuário é o paciente
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'agendamentos',
+        filter: `paciente_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('[Realtime] New appointment (as patient):', payload);
+        if (!isInitialLoad.current) {
+          playSound();
+          toast.success("Agendamento Registrado", {
+            description: "Sua solicitação de consulta foi enviada com sucesso."
+          });
+        }
+      })
+      // Escuta atualizações em agendamentos existentes
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'agendamentos'
+      }, (payload) => {
+        console.log('[Realtime] Appointment update received:', payload);
+        if (!isInitialLoad.current) {
+          const record = payload.new as any;
+          if (record && (record.paciente_id === user.id || record.fisio_id === user.id)) {
+            playSound();
+            toast.info("Agendamento Atualizado", {
+              description: `O status do agendamento foi alterado para: ${record.status}`
+            });
+          }
+        }
+      })
+      .subscribe((status) => {
+        console.log('[Realtime] Appointments subscription status:', status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(appointmentsChannel);
+    };
+  }, [user]);
+
+  return null;
+}
+
+
+function AppContent() {
+  const { user, profile, loading: authLoading } = useAuth();
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isPatientArea = user && profile?.tipo_usuario === 'paciente';
+  const isPhysioArea = user && profile?.tipo_usuario === 'fisioterapeuta' && profile?.tipo_usuario !== 'admin';
+  const isAdminArea = user && (profile?.tipo_usuario === 'admin' || profile?.plano === 'admin' || user?.email?.toLowerCase() === 'hogolezcano92@gmail.com');
+  const isAuthPage = ['/login', '/register', '/reset-password'].includes(location.pathname);
+  const isLandingPage = location.pathname === '/' || location.pathname === '/home';
+  const isAdminPage = location.pathname.startsWith('/admin') || location.pathname === '/preview';
+
+  const isApproved = profile?.status_aprovacao === 'aprovado';
+  const isWaitingPage = location.pathname === '/aguardando-aprovacao';
+  const showSidebar = user && !isLandingPage && !isAuthPage && location.pathname !== '/preview' && !isAdminPage && !isWaitingPage && (isApproved || isAdminArea || isPatientArea);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/reset-password');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWhatsApp(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (authLoading) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <div className="min-h-screen bg-bg-general font-sans text-text-main flex transition-colors duration-300">
+      <Toaster position="top-right" richColors closeButton />
+      
+      <ErrorBoundary>
+        <Suspense fallback={null}>
+          {!isAdminPage && <KineAI />}
+        </Suspense>
+        <NotificationHandler />
+        <ScrollToTop />
+        
+        <Suspense fallback={null}>
+          {showSidebar && <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />}
+        </Suspense>
+
+        <div className="flex-1 flex flex-col min-w-0 bg-bg-general min-h-screen">
+          {!showSidebar && !isAdminPage && !isWaitingPage ? <Navbar /> : (showSidebar && (
+            <header className="lg:hidden bg-slate-950/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50 px-4 sm:px-6 h-16 flex items-center justify-between pt-[env(safe-area-inset-top)] min-h-[4rem] w-full">
+              <Logo variant="light" size="sm" />
+              <div className="flex items-center gap-4">
+                <NotificationBell />
+                <button 
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="p-2 text-slate-300 hover:text-primary transition-colors rounded-xl hover:bg-white/5"
+                >
+                  <Menu size={24} />
+                </button>
+              </div>
+            </header>
+          ))}
+
+          <main className={cn(
+            "flex-1 w-full flex flex-col min-w-0 bg-slate-950 rounded-t-[20px] shadow-2xl relative z-10",
+            location.pathname === '/chat' || showSidebar || isAdminPage || isWaitingPage ? "max-w-none" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+          )}>
+            <div className={cn(
+              "flex-1 w-full",
+              !showSidebar && !isAdminPage && !isWaitingPage && location.pathname !== '/chat' && "py-8 md:py-12",
+              showSidebar && location.pathname !== '/chat' && "p-4 md:p-6 lg:p-10"
+            )}>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/aguardando-aprovacao" element={
+                    <ProtectedRoute>
+                      <AguardandoAprovacao />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Protected Routes */}
+                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/triage" element={<ProtectedRoute allowedRoles={['paciente']}><Triage /></ProtectedRoute>} />
+                  <Route path="/triagem-ia" element={<ProtectedRoute allowedRoles={['paciente']}><Triage /></ProtectedRoute>} />
+                  <Route path="/records" element={<ProtectedRoute><Records /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/area-paciente" element={<ProtectedRoute allowedRoles={['paciente']}><Profile /></ProtectedRoute>} />
+                  <Route path="/appointments" element={<ProtectedRoute allowedRoles={['paciente']}><Appointments /></ProtectedRoute>} />
+                  <Route path="/patients" element={<ProtectedRoute allowedRoles={['fisioterapeuta']}><Patients /></ProtectedRoute>} />
+                  <Route path="/patients/:id" element={<ProtectedRoute allowedRoles={['fisioterapeuta']}><PatientDetails /></ProtectedRoute>} />
+                  <Route path="/agenda" element={<ProtectedRoute allowedRoles={['fisioterapeuta']}><Agenda /></ProtectedRoute>} />
+                  <Route path="/exercises" element={<ProtectedRoute allowedRoles={['fisioterapeuta']}><Exercises /></ProtectedRoute>} />
+                  <Route path="/patient/exercises" element={<ProtectedRoute allowedRoles={['paciente']}><PatientExercises /></ProtectedRoute>} />
+                  <Route path="/physio/triages" element={<ProtectedRoute allowedRoles={['fisioterapeuta']}><PhysioTriages /></ProtectedRoute>} />
+                  <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                  <Route path="/subscription" element={<ProtectedRoute allowedRoles={['fisioterapeuta']}><Subscription /></ProtectedRoute>} />
+                  <Route path="/dashboard/assinatura" element={<ProtectedRoute allowedRoles={['fisioterapeuta']}><Subscription /></ProtectedRoute>} />
+                  <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+                  <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><Admin /></ProtectedRoute>} />
+                  <Route path="/preview" element={<ProtectedRoute allowedRoles={['admin']}><AppPreview /></ProtectedRoute>} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/sobre" element={<About />} />
+                  <Route path="/partner" element={<Partner />} />
+                  <Route path="/seja-parceiro" element={<Partner />} />
+                  <Route path="/patient/library" element={<ProtectedRoute allowedRoles={['paciente']}><HealthLibrary /></ProtectedRoute>} />
+                  <Route path="/agendamento/confirmar" element={<ConfirmAppointment />} />
+                  <Route path="/physio/:id" element={<ProfessionalProfile />} />
+                </Routes>
+              </Suspense>
+            </div>
+
+            {/* Novo Rodapé (Footer) solicitado - Only show in areas where it makes sense */}
+            {(showSidebar || isAdminPage || isWaitingPage) && (
+              <footer className={cn(
+                "mt-auto border-t transition-all duration-300",
+                isAdminPage || showSidebar
+                  ? "bg-white border-slate-100 py-6" 
+                  : "bg-transparent border-white/5 py-10 text-slate-500"
+              )}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  {isAdminPage || showSidebar ? (
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-bold tracking-widest uppercase">
+                      <div className="text-slate-900">
+                        © 2026 FisioCareHub
+                      </div>
+                      
+                      <div className="flex items-center gap-3 text-slate-500">
+                        <div className="relative flex h-2 w-2">
+                          <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></div>
+                          <div className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></div>
+                        </div>
+                        <span>Sistema Online <span className="text-slate-300 font-medium ml-1">(v2.4.0)</span></span>
+                      </div>
+
+                      <div className="text-slate-400">
+                        Desenvolvido por <span className="text-primary font-black">AÍ Studio Gemini</span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Public Footer (Simple) */
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                      <span className="font-bold text-sm">© 2026 FisioCareHub — Reabilitação & Performance</span>
+                      <div className="flex gap-8 font-bold text-sm">
+                        <a href="/termos" className="hover:text-primary transition-colors">Termos</a>
+                        <a href="/privacidade" className="hover:text-primary transition-colors">Privacidade</a>
+                        <a href="/suporte" className="hover:text-primary transition-colors">Suporte</a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </footer>
+            )}
+          </main>
+
+          {!showSidebar && !isAdminPage && !isWaitingPage && location.pathname !== '/chat' && (
+            <footer className="bg-white border-t border-border-soft py-20">
+              <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-16">
+                <div className="space-y-6">
+                  <Logo size="lg" />
+                  <p className="text-base text-text-muted leading-relaxed font-medium">
+                    Sua reabilitação no conforto de casa. Transformando a fisioterapia através da tecnologia e do cuidado humanizado para todas as idades.
+                  </p>
+                </div>
+                
+                <div className="space-y-6">
+                  <h4 className="text-xl font-black text-text-main uppercase tracking-widest">LINKS RÁPIDOS</h4>
+                  <ul className="space-y-4 text-base text-text-muted font-medium">
+                    <li><Link to="/sobre" className="hover:text-primary transition-colors">Sobre Nós</Link></li>
+                    <li><Link to="/seja-parceiro" className="hover:text-primary transition-colors">Seja um Parceiro</Link></li>
+                    <li><Link to="/triagem-ia" className="hover:text-primary transition-colors">Triagem IA</Link></li>
+                    <li><Link to="/area-paciente" className="hover:text-primary transition-colors">Área do Paciente</Link></li>
+                  </ul>
+                </div>
+
+                <div className="space-y-6">
+                  <h4 className="text-xl font-black text-text-main uppercase tracking-widest">SUPORTE TÉCNICO</h4>
+                  <p className="text-base text-text-muted font-medium leading-relaxed">
+                    Exclusivo para dúvidas sobre o aplicativo e suporte técnico. Para falar com seu fisioterapeuta, utilize a agenda no perfil dele.
+                  </p>
+                  <ul className="space-y-4 text-base text-text-muted font-medium">
+                    <li className="flex items-center gap-3"><Phone size={20} className="text-primary" /> (11) 98404-0563</li>
+                    <li className="flex items-center gap-3"><HelpCircle size={20} className="text-primary" /> suporte@fisiocarehub.com</li>
+                    <li className="flex items-center gap-3 text-emerald-600 font-black">
+                      <a href="https://wa.me/5511984040563" target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:underline">
+                        <MessageCircle size={24} /> Suporte via WhatsApp
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="max-w-7xl mx-auto px-4 text-center text-text-muted text-sm mt-20 pt-8 border-t border-border-soft">
+                &copy; {new Date().getFullYear()} FisioCareHub. Todos os direitos reservados. <br />
+                <span className="text-xs mt-2 block">Cuidado humanizado e tecnologia para sua saúde.</span>
+              </div>
+            </footer>
+          )}
+      </div>
+    </ErrorBoundary>
+
+      <AnimatePresence>
+        {showWhatsApp && location.pathname !== '/chat' && !isAdminPage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, x: 50 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.5, x: 50 }}
+            className="fixed bottom-28 right-6 z-[100] group"
+          >
+            <div className="relative flex items-center">
+              {/* Label que aparece apenas no hover */}
+              <div className="absolute right-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                <div className="bg-white px-3 py-1.5 rounded-xl shadow-lg border border-emerald-100 text-emerald-600 font-bold text-xs backdrop-blur-md bg-white/90">
+                  Suporte WhatsApp
+                </div>
+              </div>
+              
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://wa.me/5511984040563"
+                target="_blank"
+                rel="noreferrer"
+                className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all relative"
+                title="Suporte via WhatsApp"
+              >
+                <MessageCircle size={28} />
+                <div className="absolute -top-1 -right-1 bg-white text-emerald-600 rounded-full p-1 shadow-sm border border-emerald-50">
+                  <Video size={12} />
+                </div>
+              </motion.a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function App() {
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initialize = async () => {
+      console.log("Iniciando aplicação...");
+      const timeoutId = setTimeout(() => {
+        console.warn("Inicialização demorou demais, forçando carregamento...");
+        setConfigLoaded(true);
+      }, 4000);
+
+      try {
+        await fetchConfig();
+        initSupabase();
+        
+        clearTimeout(timeoutId);
+        setConfigLoaded(true);
+        console.log("Aplicação inicializada com sucesso.");
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        console.error("Erro na inicialização:", err);
+        setError(err.message || "Erro ao carregar configurações do sistema.");
+      }
+    };
+
+    initialize();
+  }, []);
+
+  useEffect(() => {
+    if (configLoaded) {
+      const hasCompletedOnboarding = localStorage.getItem('onboarding_completed');
+      if (!hasCompletedOnboarding) {
+        setShowOnboarding(true);
+      }
+      // Pequeno delay para garantir que o estado de configLoaded se propague
+      const timer = setTimeout(() => setShowSplash(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [configLoaded]);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('onboarding_completed', 'true');
+    setShowOnboarding(false);
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-sky-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-[3rem] shadow-2xl max-w-md w-full text-center border border-sky-100">
+          <AlertTriangle size={48} className="text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-black mb-2">Erro de Inicialização</h2>
+          <p className="text-slate-500 mb-6">{error}</p>
+          <button onClick={() => window.location.reload()} className="w-full py-4 bg-sky-500 text-white rounded-full font-black">
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {showSplash ? (
+        <SplashScreen />
+      ) : showOnboarding ? (
+        <Suspense fallback={<SplashScreen />}>
+          <Onboarding onComplete={handleOnboardingComplete} />
+        </Suspense>
+      ) : (
+        <div className="block">
+          <BrowserRouter>
+            <AuthProvider>
+              <Suspense fallback={<SplashScreen />}>
+                <AppContent />
+              </Suspense>
+            </AuthProvider>
+          </BrowserRouter>
+        </div>
+      )}
+    </>
+  );
+}

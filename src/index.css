@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Poppins:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", serif;
+  --font-accent: "Poppins", sans-serif;
+  
+  /* SaaS Health Premium Palette */
+  --color-primary: #0047AB;
+  --color-primary-hover: #003580;
+  --color-bg-general: #0B1120;
+  --color-card: #1E293B;
+  --color-border-soft: #334155;
+  --color-text-main: #FFFFFF;
+  --color-text-muted: #E1E1E1;
+
+  /* Custom Palette for Home Care */
+  --color-home-blue: #e0f2fe; /* light blue */
+  --color-home-green: #d1fae5; /* pastel green */
+  --color-home-peach: #ffedd5; /* peach */
+  --color-home-trust: #0047AB; /* trust blue */
+
+  /* Dark Mode Overrides (Defaulting to Dark for Premium Feel) */
+  --color-background: #0B1120;
+  --color-foreground: #FFFFFF;
+
+  /* Premium Shadows */
+  --shadow-premium: 0 4px 20px -5px rgba(0, 71, 171, 0.2);
+  --shadow-premium-hover: 0 10px 30px -10px rgba(0, 71, 171, 0.3);
+}
+
+@layer utilities {
+  .text-ice {
+    color: #E1E1E1;
+  }
+  
+  .bg-medical-pattern {
+    position: relative;
+    background-color: #0B1120;
+    background-image: 
+      linear-gradient(to right, rgba(11, 17, 32, 0.95), rgba(11, 17, 32, 0.95)),
+      url("https://images.unsplash.com/photo-1584432810601-6a7f27a2362b?auto=format&fit=crop&q=80&w=2000");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .glass-card {
+    @apply bg-slate-900/70 backdrop-blur-xl border border-white/10 shadow-premium;
+  }
+
+  .glass-card-hover {
+    @apply hover:bg-slate-900/80 hover:shadow-premium-hover transition-all duration-300;
+  }
+}
+
+@layer base {
+  html {
+    font-size: 14px; /* Global scale reduction ~15% */
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  body {
+    @apply text-white bg-slate-950;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+
+  /* Premium Transitions */
+  button, a, .sidebar-item {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* Dark Mode Secondary Text Contrast */
+  .text-text-muted, .text-slate-500 {
+    color: #E1E1E1 !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-white;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  button:focus-visible, 
+  a:focus-visible, 
+  input:focus-visible, 
+  select:focus-visible, 
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .premium-card {
+    @apply bg-slate-900/50 backdrop-blur-xl p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 shadow-xl hover:shadow-2xl transition-all duration-500;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge-physio {
+    @apply bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-100 dark:border-blue-800/30;
+  }
+
+  .badge-patient {
+    @apply bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 px-3 py-1 rounded-full text-xs font-bold border border-violet-100 dark:border-violet-800/30;
+  }
+
+  .badge-approved {
+    @apply bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200 dark:border-emerald-700/50 shadow-[0_0_10px_rgba(16,185,129,0.1)];
+  }
+
+  .ping-online {
+    @apply relative flex h-3 w-3;
+  }
+  .ping-online-circle {
+    @apply animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75;
+  }
+  .ping-online-dot {
+    @apply relative inline-flex rounded-full h-3 w-3 bg-emerald-500;
+  }
+
+  .btn-compact {
+    @apply px-4 py-2 text-sm font-bold rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2;
+  }
+  
+  .btn-primary-compact {
+    @apply btn-compact bg-[#0047AB] text-white hover:bg-[#003580] shadow-md;
+  }
+
+  .input-compact {
+    @apply w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0047AB]/50 transition-all;
+  }
+
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6;
+  }
+  
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@keyframes pulse-custom {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.animate-pulse-custom {
+  animation: pulse-custom 2s infinite;
+}
+
+@keyframes swing {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(5deg); }
+  80% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.animate-swing {
+  animation: swing 1s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Corrigindo o texto digitado e o fundo para inputs globais */
+input:not(.input-compact), select:not(.input-compact), textarea:not(.input-compact) {
+  color: #1a1a1a !important;
+  background-color: #ffffff !important;
+}
+
+.input-compact {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+input::placeholder {
+  color: #757575 !important;
+  opacity: 0.7; 
+}
+
+.input-compact::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
