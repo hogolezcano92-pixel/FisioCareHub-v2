@@ -146,11 +146,11 @@ export default function Patients() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-3 w-full">
         <div>
           <h1 className="text-xl font-black text-white tracking-tight">Meus Pacientes</h1>
-          <p className="text-slate-500 font-medium text-xs">Gerencie sua base de pacientes e prontuários.</p>
+          <p className="text-slate-400 font-medium text-xs">Gerencie sua base de pacientes e prontuários.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0047AB] text-white rounded-xl font-black text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/20"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-500 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-sky-600 transition-all shadow-lg shadow-sky-900/20"
         >
           <Plus size={16} />
           Novo Paciente
@@ -158,7 +158,7 @@ export default function Patients() {
       </header>
 
       <div className="relative w-full">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
         <input
           type="text"
           placeholder="Buscar por nome ou e-mail..."
@@ -170,12 +170,12 @@ export default function Patients() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {filteredPatients.length === 0 ? (
-          <div className="col-span-full premium-card !p-12 text-center w-full">
-            <div className="w-16 h-16 bg-white/5 text-slate-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="col-span-full bg-slate-900/50 backdrop-blur-xl !p-12 rounded-[2.5rem] border border-white/10 text-center w-full shadow-2xl">
+            <div className="w-16 h-16 bg-white/5 text-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
               <User size={32} />
             </div>
             <h3 className="text-lg font-black text-white">Nenhum paciente encontrado</h3>
-            <p className="text-slate-500 mt-1 text-xs font-medium">Comece cadastrando seu primeiro paciente.</p>
+            <p className="text-slate-400 mt-1 text-xs font-medium">Comece cadastrando seu primeiro paciente.</p>
           </div>
         ) : (
           filteredPatients.map((patient) => (
@@ -183,11 +183,12 @@ export default function Patients() {
               key={patient.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="premium-card !p-5 group cursor-pointer hover:border-blue-500/30 transition-all"
+              onClick={() => navigate(`/patient/${patient.id}`)}
+              className="bg-slate-900/50 backdrop-blur-xl !p-5 rounded-[2rem] border border-white/10 group cursor-pointer hover:border-sky-500/30 transition-all shadow-lg"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-blue-400 overflow-hidden border border-white/5 shadow-sm">
+                  <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-sky-400 overflow-hidden border border-white/10 shadow-sm">
                     {patient.foto_url ? (
                       <img src={patient.foto_url} alt={patient.nome} className="w-full h-full object-cover" />
                     ) : (
@@ -195,10 +196,10 @@ export default function Patients() {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-white leading-tight group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-base font-black text-white leading-tight group-hover:text-sky-400 transition-colors">
                       {patient.nome}
                     </h3>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                    <p className="text-[8px] font-bold text-sky-400 uppercase tracking-widest">
                       {patient.diagnostico || 'Sem diagnóstico'}
                     </p>
                   </div>
@@ -227,15 +228,15 @@ export default function Patients() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between pt-4 border-t border-white/10">
                 <div className="flex -space-x-1.5">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                    <div key={i} className="w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[8px] font-bold text-slate-600">
                       <FileText size={9} />
                     </div>
                   ))}
                 </div>
-                <button className="flex items-center gap-1 text-[11px] font-black text-blue-400 hover:gap-2 transition-all">
+                <button className="flex items-center gap-1 text-[11px] font-black text-sky-400 hover:gap-2 transition-all">
                   Ver Ficha <ChevronRight size={12} />
                 </button>
               </div>
@@ -347,7 +348,7 @@ export default function Patients() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 bg-[#0047AB] text-white rounded-xl font-black text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-sky-500 text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-sky-600 transition-all shadow-xl shadow-sky-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {submitting ? <Loader2 className="animate-spin" /> : 'Salvar Paciente'}
                 </button>

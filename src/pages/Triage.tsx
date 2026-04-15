@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   AlertCircle,
   User,
+  Users,
   ClipboardList,
   AlertTriangle,
   Scale,
@@ -237,9 +238,31 @@ export default function Triage() {
     toast.success("Relatório baixado!");
   };
 
-  const shareWithPhysio = () => {
-    toast.success("Relatório compartilhado com seu fisioterapeuta!");
-    // In a real app, this could trigger a notification or message
+  const shareWithPhysio = async () => {
+    if (!user || !analysis) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('solicitacoes_atendimento')
+        .insert({
+          paciente_id: user.id,
+          descricao: `Triagem IA realizada para ${formData.regiao_dor}. Gravidade: ${analysis.gravidade}. Classificação: ${analysis.classificacao}.`,
+          localizacao: profile?.localizacao || 'Não informada',
+          especialidade: formData.regiao_dor,
+          status: 'pendente'
+        });
+
+      if (error) throw error;
+
+      toast.success("Sua solicitação foi enviada para a rede de fisioterapeutas!");
+      navigate('/buscar-fisio');
+    } catch (err) {
+      console.error('Erro ao criar solicitação:', err);
+      toast.error('Erro ao enviar solicitação');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const nextStep = () => {
@@ -272,13 +295,13 @@ export default function Triage() {
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-primary text-white rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-primary/20"
+          className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-sky-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-sky-900/20"
         >
           <BrainCircuit size={32} />
         </motion.div>
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-black text-text-main tracking-tight">Triagem <span className="text-primary italic">Inteligente</span></h1>
-          <p className="text-sm text-text-muted font-medium">Avaliação clínica completa guiada por IA.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Triagem <span className="text-sky-400 italic">Inteligente</span></h1>
+          <p className="text-sm text-slate-400 font-medium">Avaliação clínica completa guiada por IA.</p>
         </div>
       </header>
 
@@ -288,21 +311,21 @@ export default function Triage() {
           <div key={step.id} className="flex items-center flex-shrink-0">
             <div className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500",
-              currentStep >= i ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-bg-general text-text-muted"
+              currentStep >= i ? "bg-sky-500 text-white shadow-lg shadow-sky-900/20" : "bg-slate-900 text-slate-600"
             )}>
               <step.icon size={14} />
             </div>
             {i < STEPS.length - 1 && (
               <div className={cn(
                 "w-4 h-0.5 mx-1 rounded-full transition-all duration-500",
-                currentStep > i ? "bg-primary" : "bg-bg-general"
+                currentStep > i ? "bg-sky-500" : "bg-slate-900"
               )} />
             )}
           </div>
         ))}
       </div>
 
-      <div className="glass-card p-5 sm:p-8 rounded-[3rem] relative overflow-hidden">
+      <div className="bg-slate-900/50 backdrop-blur-xl p-5 sm:p-8 rounded-[3rem] border border-white/10 shadow-2xl relative overflow-hidden">
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div
@@ -316,15 +339,15 @@ export default function Triage() {
                 <motion.div
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full"
+                  className="absolute inset-0 bg-sky-500/20 blur-3xl rounded-full"
                 />
-                <div className="w-24 h-24 bg-indigo-600 text-white rounded-[2rem] flex items-center justify-center shadow-2xl relative z-10 animate-pulse">
+                <div className="w-24 h-24 bg-sky-600 text-white rounded-[2rem] flex items-center justify-center shadow-2xl relative z-10 animate-pulse border border-white/10">
                   <BrainCircuit size={48} />
                 </div>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-slate-900">Analisando Dados Clínicos...</h3>
-                <p className="text-slate-500 font-medium animate-pulse">Nossa IA está gerando seu relatório de triagem.</p>
+                <h3 className="text-2xl font-black text-white">Analisando Dados Clínicos...</h3>
+                <p className="text-slate-400 font-medium animate-pulse">Nossa IA está gerando seu relatório de triagem.</p>
               </div>
             </motion.div>
           ) : currentStep < STEPS.length ? (
@@ -338,72 +361,72 @@ export default function Triage() {
               {/* Step 0: Basic Data */}
               {currentStep === 0 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-black text-text-main">Dados Básicos</h2>
+                  <h2 className="text-2xl font-black text-white tracking-tight">Dados Básicos</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-text-main ml-2">Idade</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Idade</label>
                       <input 
                         type="number" 
                         value={formData.idade}
                         onChange={(e) => setFormData({...formData, idade: e.target.value})}
-                        className="w-full p-4 bg-bg-general border border-border-soft rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-4 focus:ring-sky-500/10 outline-none transition-all text-white"
                         placeholder="Ex: 30"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-text-main ml-2">Sexo</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Sexo</label>
                       <select 
                         value={formData.sexo}
                         onChange={(e) => setFormData({...formData, sexo: e.target.value})}
-                        className="w-full p-4 bg-bg-general border border-border-soft rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-4 focus:ring-sky-500/10 outline-none transition-all text-white"
                       >
-                        <option value="">Selecione</option>
-                        <option value="Masculino">Masculino</option>
-                        <option value="Feminino">Feminino</option>
-                        <option value="Outro">Outro</option>
+                        <option value="" className="bg-slate-900">Selecione</option>
+                        <option value="Masculino" className="bg-slate-900">Masculino</option>
+                        <option value="Feminino" className="bg-slate-900">Feminino</option>
+                        <option value="Outro" className="bg-slate-900">Outro</option>
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-text-main ml-2">Peso (kg)</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Peso (kg)</label>
                       <input 
                         type="number" 
                         value={formData.peso}
                         onChange={(e) => setFormData({...formData, peso: e.target.value})}
-                        className="w-full p-4 bg-bg-general border border-border-soft rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-4 focus:ring-sky-500/10 outline-none transition-all text-white"
                         placeholder="Ex: 75"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-text-main ml-2">Altura (m)</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Altura (m)</label>
                       <input 
                         type="number" 
                         step="0.01"
                         value={formData.altura}
                         onChange={(e) => setFormData({...formData, altura: e.target.value})}
-                        className="w-full p-4 bg-bg-general border border-border-soft rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-4 focus:ring-sky-500/10 outline-none transition-all text-white"
                         placeholder="Ex: 1.75"
                       />
                     </div>
                     <div className="space-y-2 sm:col-span-2">
-                      <label className="text-sm font-bold text-text-main ml-2">Profissão</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Profissão</label>
                       <input 
                         type="text" 
                         value={formData.profissao}
                         onChange={(e) => setFormData({...formData, profissao: e.target.value})}
-                        className="w-full p-4 bg-bg-general border border-border-soft rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-4 focus:ring-sky-500/10 outline-none transition-all text-white"
                         placeholder="Ex: Engenheiro, Professor..."
                       />
                     </div>
                     <div className="space-y-2 sm:col-span-2">
-                      <label className="text-sm font-bold text-text-main ml-2">Nível de Atividade Física</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Nível de Atividade Física</label>
                       <div className="grid grid-cols-2 gap-2">
                         {['Sedentário', 'Atividade Leve', 'Atividade Moderada', 'Atividade Intensa'].map(level => (
                           <button
                             key={level}
                             onClick={() => setFormData({...formData, atividade_fisica: level})}
                             className={cn(
-                              "p-3 rounded-xl border-2 text-xs font-bold transition-all",
-                              formData.atividade_fisica === level ? "border-primary bg-primary/5 text-primary" : "border-border-soft bg-bg-general text-text-muted"
+                              "p-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                              formData.atividade_fisica === level ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5 text-slate-500"
                             )}
                           >
                             {level}
@@ -418,10 +441,10 @@ export default function Triage() {
               {/* Step 1: Main Complaint */}
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-black text-text-main">Queixa Principal</h2>
+                  <h2 className="text-xl font-black text-white tracking-tight">Queixa Principal</h2>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-text-main ml-1">Região do Corpo</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Região do Corpo</label>
                       <select 
                         value={formData.regiao_dor}
                         onChange={(e) => {
@@ -431,11 +454,11 @@ export default function Triage() {
                             perguntas_especificas: {} // Reset specific questions when region changes
                           });
                         }}
-                        className="w-full p-4 bg-bg-general border border-border-soft rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-4 focus:ring-sky-500/10 outline-none transition-all text-white"
                       >
-                        <option value="">Selecione a região</option>
+                        <option value="" className="bg-slate-900">Selecione a região</option>
                         {['Cervical', 'Ombro', 'Cotovelo', 'Punho/Mão', 'Coluna Lombar', 'Quadril', 'Joelho', 'Tornozelo/Pé', 'Outro'].map(r => (
-                          <option key={r} value={r}>{r}</option>
+                          <option key={r} value={r} className="bg-slate-900">{r}</option>
                         ))}
                       </select>
                     </div>
@@ -445,12 +468,12 @@ export default function Triage() {
                       <motion.div 
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="space-y-4 pt-4 border-t border-border-soft"
+                        className="space-y-4 pt-4 border-t border-white/10"
                       >
-                        <h3 className="text-sm font-black text-primary uppercase tracking-widest">Perguntas Específicas</h3>
+                        <h3 className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Perguntas Específicas</h3>
                         {REGION_QUESTIONS[formData.regiao_dor].map((q) => (
                           <div key={q.id} className="space-y-2">
-                            <label className="text-sm font-bold text-text-main ml-1">{q.label}</label>
+                            <label className="text-sm font-bold text-white ml-1">{q.label}</label>
                             {q.type === 'boolean' ? (
                               <div className="grid grid-cols-2 gap-2">
                                 {['Sim', 'Não'].map(opt => (
@@ -464,8 +487,8 @@ export default function Triage() {
                                       }
                                     })}
                                     className={cn(
-                                      "p-3 rounded-xl border-2 text-sm font-bold transition-all",
-                                      formData.perguntas_especificas[q.id] === (opt === 'Sim') ? "border-primary bg-primary/5 text-primary" : "border-border-soft bg-bg-general text-text-muted"
+                                      "p-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                                      formData.perguntas_especificas[q.id] === (opt === 'Sim') ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5 text-slate-500"
                                     )}
                                   >
                                     {opt}
@@ -482,11 +505,11 @@ export default function Triage() {
                                     [q.id]: e.target.value
                                   }
                                 })}
-                                className="w-full p-3 bg-bg-general border border-border-soft rounded-xl outline-none"
+                                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl outline-none text-white text-sm"
                               >
-                                <option value="">Selecione</option>
+                                <option value="" className="bg-slate-900">Selecione</option>
                                 {q.options.map((opt: string) => (
-                                  <option key={opt} value={opt}>{opt}</option>
+                                  <option key={opt} value={opt} className="bg-slate-900">{opt}</option>
                                 ))}
                               </select>
                             )}
@@ -496,7 +519,7 @@ export default function Triage() {
                     )}
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-text-main ml-1">Como começou?</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Como começou?</label>
                       <div className="grid grid-cols-1 gap-2">
                         {[
                           { id: 'queda', label: 'Após queda ou acidente' },
@@ -508,8 +531,8 @@ export default function Triage() {
                             key={type.id}
                             onClick={() => setFormData({...formData, inicio_sintomas: type.label})}
                             className={cn(
-                              "p-4 rounded-xl border-2 text-sm font-bold transition-all text-left",
-                              formData.inicio_sintomas === type.label ? "border-primary bg-primary/5 text-primary" : "border-border-soft bg-bg-general text-text-muted"
+                              "p-4 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest transition-all text-left",
+                              formData.inicio_sintomas === type.label ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5 text-slate-500"
                             )}
                           >
                             {type.label}
@@ -518,12 +541,12 @@ export default function Triage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-text-main ml-1">Há quanto tempo sente isso?</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Há quanto tempo sente isso?</label>
                       <input 
                         type="text" 
                         value={formData.tempo_sintomas}
                         onChange={(e) => setFormData({...formData, tempo_sintomas: e.target.value})}
-                        className="w-full p-4 bg-bg-general border border-border-soft rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-4 focus:ring-sky-500/10 outline-none transition-all text-white"
                         placeholder="Ex: 2 semanas, 3 meses..."
                       />
                     </div>
@@ -534,28 +557,28 @@ export default function Triage() {
               {/* Step 2: Clinical History */}
               {currentStep === 2 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-black text-text-main">Histórico Clínico</h2>
+                  <h2 className="text-2xl font-black text-white tracking-tight">Histórico Clínico</h2>
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-bg-general rounded-2xl">
-                      <span className="font-bold text-text-main">Já realizou fisioterapia antes?</span>
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                      <span className="text-sm font-bold text-white">Já realizou fisioterapia antes?</span>
                       <button 
                         onClick={() => setFormData({...formData, historico_clinico: {...formData.historico_clinico, fisioterapia_anterior: !formData.historico_clinico.fisioterapia_anterior}})}
-                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.historico_clinico.fisioterapia_anterior ? "bg-primary" : "bg-border-soft")}
+                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.historico_clinico.fisioterapia_anterior ? "bg-sky-500" : "bg-slate-800")}
                       >
                         <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all", formData.historico_clinico.fisioterapia_anterior ? "left-7" : "left-1")} />
                       </button>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-bg-general rounded-2xl">
-                      <span className="font-bold text-text-main">Possui diagnóstico médico?</span>
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                      <span className="text-sm font-bold text-white">Possui diagnóstico médico?</span>
                       <button 
                         onClick={() => setFormData({...formData, historico_clinico: {...formData.historico_clinico, diagnostico_medico: !formData.historico_clinico.diagnostico_medico}})}
-                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.historico_clinico.diagnostico_medico ? "bg-primary" : "bg-border-soft")}
+                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.historico_clinico.diagnostico_medico ? "bg-sky-500" : "bg-slate-800")}
                       >
                         <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all", formData.historico_clinico.diagnostico_medico ? "left-7" : "left-1")} />
                       </button>
                     </div>
                     <div className="space-y-3">
-                      <label className="text-sm font-bold text-text-main ml-2">Realizou exames de imagem?</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Realizou exames de imagem?</label>
                       <div className="flex flex-wrap gap-2">
                         {['Raio X', 'Ressonância', 'Tomografia', 'Ultrassom'].map(exam => (
                           <button
@@ -566,8 +589,8 @@ export default function Triage() {
                               setFormData({...formData, historico_clinico: {...formData.historico_clinico, exames_imagem: newExams}});
                             }}
                             className={cn(
-                              "px-4 py-2 rounded-full border-2 text-xs font-bold transition-all",
-                              formData.historico_clinico.exames_imagem.includes(exam) ? "border-primary bg-primary/5 text-primary" : "border-border-soft bg-bg-general text-text-muted"
+                              "px-4 py-2 rounded-full border-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                              formData.historico_clinico.exames_imagem.includes(exam) ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5 text-slate-500"
                             )}
                           >
                             {exam}
@@ -576,7 +599,7 @@ export default function Triage() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <label className="text-sm font-bold text-text-main ml-2">Doenças pré-existentes</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Doenças pré-existentes</label>
                       <div className="flex flex-wrap gap-2">
                         {['Diabetes', 'Hipertensão', 'Doença Cardíaca', 'Cirurgias Prévias'].map(disease => (
                           <button
@@ -587,8 +610,8 @@ export default function Triage() {
                               setFormData({...formData, doencas_preexistentes: newDiseases});
                             }}
                             className={cn(
-                              "px-4 py-2 rounded-full border-2 text-xs font-bold transition-all",
-                              formData.doencas_preexistentes.includes(disease) ? "border-primary bg-primary/5 text-primary" : "border-border-soft bg-bg-general text-text-muted"
+                              "px-4 py-2 rounded-full border-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                              formData.doencas_preexistentes.includes(disease) ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5 text-slate-500"
                             )}
                           >
                             {disease}
@@ -605,9 +628,9 @@ export default function Triage() {
                 <div className="space-y-6">
                   <div className="flex items-center gap-3">
                     <AlertTriangle className="text-amber-500" size={32} />
-                    <h2 className="text-xl font-black text-text-main">Sinais de Alerta</h2>
+                    <h2 className="text-xl font-black text-white tracking-tight">Sinais de Alerta</h2>
                   </div>
-                  <p className="text-sm text-text-muted font-medium">Marque se você apresenta algum destes sintomas associados à dor:</p>
+                  <p className="text-sm text-slate-400 font-medium">Marque se você apresenta algum destes sintomas associados à dor:</p>
                   <div className="grid grid-cols-1 gap-3">
                     {[
                       { id: 'febre', label: 'Febre associada à dor' },
@@ -623,7 +646,7 @@ export default function Triage() {
                         onClick={() => setFormData({...formData, red_flags: {...formData.red_flags, [flag.id]: !formData.red_flags[flag.id as keyof typeof formData.red_flags]}})}
                         className={cn(
                           "p-4 rounded-2xl border-2 text-sm font-bold transition-all text-left flex items-center justify-between",
-                          formData.red_flags[flag.id as keyof typeof formData.red_flags] ? "border-amber-500 bg-amber-50 text-amber-700" : "border-border-soft bg-bg-general text-text-muted"
+                          formData.red_flags[flag.id as keyof typeof formData.red_flags] ? "border-amber-500 bg-amber-500/10 text-amber-400" : "border-white/10 bg-white/5 text-slate-500"
                         )}
                       >
                         {flag.label}
@@ -635,7 +658,7 @@ export default function Triage() {
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-4 bg-amber-100 border border-amber-200 rounded-2xl text-amber-900 text-sm font-bold flex items-start gap-3"
+                      className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 text-xs font-bold flex items-start gap-3"
                     >
                       <AlertCircle className="flex-shrink-0 mt-0.5" size={18} />
                       <p>Alguns sinais indicam que uma avaliação médica pode ser necessária antes da fisioterapia.</p>
@@ -647,36 +670,36 @@ export default function Triage() {
               {/* Step 4: Functional Assessment */}
               {currentStep === 4 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-black text-text-main">Avaliação Funcional</h2>
+                  <h2 className="text-2xl font-black text-white tracking-tight">Avaliação Funcional</h2>
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-bg-general rounded-2xl">
-                      <span className="font-bold text-text-main">Consegue realizar movimentos normalmente?</span>
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                      <span className="text-sm font-bold text-white">Consegue realizar movimentos normalmente?</span>
                       <button 
                         onClick={() => setFormData({...formData, avaliacao_funcional: {...formData.avaliacao_funcional, movimentos_normais: !formData.avaliacao_funcional.movimentos_normais}})}
-                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.avaliacao_funcional.movimentos_normais ? "bg-primary" : "bg-border-soft")}
+                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.avaliacao_funcional.movimentos_normais ? "bg-sky-500" : "bg-slate-800")}
                       >
                         <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all", formData.avaliacao_funcional.movimentos_normais ? "left-7" : "left-1")} />
                       </button>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-bg-general rounded-2xl">
-                      <span className="font-bold text-text-main">A dor piora com o movimento?</span>
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                      <span className="text-sm font-bold text-white">A dor piora com o movimento?</span>
                       <button 
                         onClick={() => setFormData({...formData, avaliacao_funcional: {...formData.avaliacao_funcional, piora_movimento: !formData.avaliacao_funcional.piora_movimento}})}
-                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.avaliacao_funcional.piora_movimento ? "bg-primary" : "bg-border-soft")}
+                        className={cn("w-12 h-6 rounded-full transition-all relative", formData.avaliacao_funcional.piora_movimento ? "bg-sky-500" : "bg-slate-800")}
                       >
                         <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all", formData.avaliacao_funcional.piora_movimento ? "left-7" : "left-1")} />
                       </button>
                     </div>
                     <div className="space-y-3">
-                      <label className="text-sm font-bold text-text-main ml-2">Nível de limitação para atividades diárias</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Nível de limitação para atividades diárias</label>
                       <div className="grid grid-cols-3 gap-3">
                         {['leve', 'moderada', 'grave'].map(level => (
                           <button
                             key={level}
                             onClick={() => setFormData({...formData, avaliacao_funcional: {...formData.avaliacao_funcional, limitacao_atividades: level as any}})}
                             className={cn(
-                              "p-4 rounded-xl border-2 text-xs font-black uppercase tracking-widest transition-all",
-                              formData.avaliacao_funcional.limitacao_atividades === level ? "border-primary bg-primary/5 text-primary" : "border-border-soft bg-bg-general text-text-muted"
+                              "p-4 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                              formData.avaliacao_funcional.limitacao_atividades === level ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5 text-slate-500"
                             )}
                           >
                             {level}
@@ -692,8 +715,8 @@ export default function Triage() {
               {currentStep === 5 && (
                 <div className="space-y-8">
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-black text-text-main">Escala de Dor</h2>
-                    <p className="text-text-muted">De 0 (sem dor) a 10 (pior dor imaginável).</p>
+                    <h2 className="text-2xl font-black text-white tracking-tight">Escala de Dor</h2>
+                    <p className="text-slate-400">De 0 (sem dor) a 10 (pior dor imaginável).</p>
                   </div>
                   <div className="relative py-10">
                     <input
@@ -702,19 +725,19 @@ export default function Triage() {
                       max="10"
                       value={formData.escala_dor}
                       onChange={(e) => setFormData({...formData, escala_dor: parseInt(e.target.value)})}
-                      className="w-full h-4 bg-bg-general rounded-full appearance-none cursor-pointer accent-primary"
+                      className="w-full h-4 bg-white/5 rounded-full appearance-none cursor-pointer accent-sky-500"
                     />
                     <div className="flex justify-between mt-6">
                       {[0, 2, 4, 6, 8, 10].map(val => (
                         <span key={val} className={cn(
                           "text-sm font-black transition-all",
-                          formData.escala_dor === val ? "text-primary scale-125" : "text-border-soft"
+                          formData.escala_dor === val ? "text-sky-400 scale-125" : "text-slate-700"
                         )}>{val}</span>
                       ))}
                     </div>
-                    <div className="mt-8 p-8 bg-primary/5 rounded-[2.5rem] text-center">
-                      <span className="text-6xl font-black text-primary">{formData.escala_dor}</span>
-                      <p className="text-primary/60 font-bold uppercase tracking-[0.3em] text-xs mt-2">
+                    <div className="mt-8 p-8 bg-sky-500/5 border border-sky-500/10 rounded-[2.5rem] text-center">
+                      <span className="text-6xl font-black text-sky-400">{formData.escala_dor}</span>
+                      <p className="text-sky-400/60 font-black uppercase tracking-[0.3em] text-[10px] mt-2">
                         {formData.escala_dor === 0 ? 'Sem Dor' : formData.escala_dor <= 3 ? 'Leve' : formData.escala_dor <= 7 ? 'Moderada' : 'Intensa'}
                       </p>
                     </div>
@@ -726,7 +749,7 @@ export default function Triage() {
                 {currentStep > 0 && (
                   <button
                     onClick={prevStep}
-                    className="flex-1 py-5 bg-bg-general text-text-muted rounded-3xl font-black hover:bg-border-soft transition-all flex items-center justify-center gap-2"
+                    className="flex-1 py-5 bg-white/5 text-slate-400 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-2 border border-white/5"
                   >
                     <ChevronLeft size={20} /> Voltar
                   </button>
@@ -734,7 +757,7 @@ export default function Triage() {
                 <button
                   onClick={nextStep}
                   disabled={!isStepValid() || loading}
-                  className="flex-[2] py-5 bg-primary text-white rounded-3xl font-black hover:bg-primary-hover transition-all shadow-premium flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-[2] py-5 bg-sky-500 text-white rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-sky-600 transition-all shadow-xl shadow-sky-900/20 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
                     <Loader2 className="animate-spin" />
@@ -753,20 +776,20 @@ export default function Triage() {
               animate={{ opacity: 1, scale: 1 }}
               className="space-y-8"
             >
-              <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-6 rounded-3xl text-white relative overflow-hidden">
+              <div className="bg-gradient-to-br from-indigo-600 to-sky-600 p-6 rounded-3xl text-white relative overflow-hidden border border-white/10 shadow-2xl shadow-sky-900/20">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                 <div className="relative z-10 flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
                     <BrainCircuit size={20} />
                   </div>
                   <div>
                     <h3 className="text-xl font-black tracking-tight">Relatório de Triagem</h3>
                     <div className="flex gap-2 mt-1">
-                      <span className="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-widest">
+                      <span className="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">
                         {analysis?.classificacao}
                       </span>
                       <span className={cn(
-                        "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest",
+                        "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10",
                         analysis?.gravidade === 'Vermelho' || analysis?.gravidade === 'grave' ? "bg-rose-500" : analysis?.gravidade === 'Amarelo' || analysis?.gravidade === 'moderado' ? "bg-amber-500" : "bg-emerald-500"
                       )}>
                         Gravidade {analysis?.gravidade}
@@ -775,17 +798,17 @@ export default function Triage() {
                   </div>
                 </div>
                 <div className="max-h-[80vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20">
-                  <div className="prose prose-invert prose-sm max-w-none bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner break-words whitespace-normal">
+                  <div className="prose prose-invert prose-sm max-w-none bg-white/5 p-4 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner break-words whitespace-normal">
                     <ReactMarkdown>{displayedAnalysis || ''}</ReactMarkdown>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-800">
+              <div className="flex items-start gap-3 p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-400">
                 <AlertCircle className="flex-shrink-0 mt-1" size={18} />
                 <div className="space-y-1">
-                  <p className="text-xs font-bold">Aviso Legal</p>
-                  <p className="text-[10px] font-medium leading-relaxed">
+                  <p className="text-xs font-bold uppercase tracking-widest">Aviso Legal</p>
+                  <p className="text-[10px] font-medium leading-relaxed opacity-80">
                     Esta triagem é informativa e não substitui avaliação presencial. Em caso de dor súbita e intensa, procure uma emergência.
                   </p>
                 </div>
@@ -795,20 +818,20 @@ export default function Triage() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={downloadReport}
-                    className="py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                    className="py-4 bg-white/5 text-slate-400 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all flex items-center justify-center gap-2 border border-white/5"
                   >
                     <Download size={18} /> Baixar
                   </button>
                   <button
                     onClick={shareWithPhysio}
-                    className="py-4 bg-primary/10 text-primary rounded-2xl font-black hover:bg-primary/20 transition-all flex items-center justify-center gap-2"
+                    className="py-4 bg-sky-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-sky-600 transition-all shadow-xl shadow-sky-900/20 flex items-center justify-center gap-2"
                   >
-                    <Send size={18} /> Enviar
+                    <Users size={18} /> Solicitar Atendimento
                   </button>
                 </div>
                 <button
                   onClick={() => setCurrentStep(0)}
-                  className="py-4 bg-bg-general text-text-muted rounded-2xl font-black hover:bg-border-soft transition-all"
+                  className="py-4 bg-slate-900 text-slate-400 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all border border-white/5"
                 >
                   Nova Triagem
                 </button>
@@ -819,21 +842,21 @@ export default function Triage() {
       </div>
 
       {/* History Section */}
-      <section className="glass-card rounded-[3.5rem] overflow-hidden">
+      <section className="bg-slate-900/50 backdrop-blur-xl rounded-[3.5rem] overflow-hidden border border-white/10 shadow-2xl">
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="w-full p-8 flex items-center justify-between hover:bg-bg-general transition-colors"
+          className="w-full p-8 flex items-center justify-between hover:bg-white/5 transition-colors"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-bg-general rounded-2xl flex items-center justify-center text-text-muted">
+            <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-slate-400">
               <History size={24} />
             </div>
             <div className="text-left">
-              <h2 className="text-xl font-black text-text-main">Histórico de Triagens</h2>
-              <p className="text-sm text-text-muted font-medium">Acompanhe suas avaliações anteriores.</p>
+              <h2 className="text-xl font-black text-white tracking-tight">Histórico de Triagens</h2>
+              <p className="text-sm text-slate-400 font-medium">Acompanhe suas avaliações anteriores.</p>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-full bg-bg-general flex items-center justify-center text-text-muted">
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400">
             {showHistory ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
         </button>
@@ -844,39 +867,39 @@ export default function Triage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="border-t border-border-soft"
+              className="border-t border-white/10"
             >
               {isHistoryLoading ? (
                 <div className="p-20 text-center space-y-4">
-                  <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-                  <p className="text-text-muted font-bold animate-pulse">Carregando histórico...</p>
+                  <Loader2 className="w-12 h-12 text-sky-500 animate-spin mx-auto" />
+                  <p className="text-slate-400 font-black uppercase tracking-widest text-xs animate-pulse">Carregando histórico...</p>
                 </div>
               ) : history.length === 0 ? (
                 <div className="p-20 text-center space-y-4">
-                  <div className="w-16 h-16 bg-bg-general rounded-full flex items-center justify-center mx-auto text-border-soft">
+                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto text-slate-700">
                     <History size={32} />
                   </div>
-                  <p className="text-text-muted font-bold uppercase tracking-widest text-xs">Nenhuma triagem encontrada</p>
+                  <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">Nenhuma triagem encontrada</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border-soft">
+                <div className="divide-y divide-white/5">
                   {history.map((item, i) => (
-                    <div key={i} className="p-8 hover:bg-bg-general transition-all group">
+                    <div key={i} className="p-8 hover:bg-white/5 transition-all group">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-widest">
+                          <div className="px-3 py-1 bg-sky-500/10 text-sky-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-sky-500/20">
                             {formatDate(item.created_at)}
                           </div>
                           <div className={cn(
-                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                            item.gravidade === 'grave' ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"
+                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                            item.gravidade === 'grave' ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                           )}>
                             {item.classificacao}
                           </div>
                         </div>
                       </div>
-                      <p className="text-text-main font-bold mb-2">{item.regiao_dor} - {item.tempo_sintomas}</p>
-                      <div className="text-text-muted text-sm line-clamp-3 prose prose-slate prose-sm max-w-none">
+                      <p className="text-white font-black mb-2 tracking-tight">{item.regiao_dor} - {item.tempo_sintomas}</p>
+                      <div className="text-slate-400 text-sm line-clamp-3 prose prose-invert prose-sm max-w-none opacity-70">
                         <ReactMarkdown>{item.relatorio}</ReactMarkdown>
                       </div>
                     </div>
