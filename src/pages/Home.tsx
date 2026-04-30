@@ -37,6 +37,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn, resolveStorageUrl } from '../lib/utils';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import PhysioHighlight from '../components/PhysioHighlight';
 
 interface Professional {
   id: string;
@@ -78,21 +79,21 @@ export default function Home() {
     {
       title: "Fisioterapia Traumato-Ortopédica",
       description: "Tratamento especializado para fraturas, dores na coluna e recuperação pós-operatória, tudo no conforto da sua casa.",
-      image: "https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?auto=format&fit=crop&q=80&w=1200",
+      image: "https://tuiuti.edu.br/wp-content/uploads/2022/12/shutterstock_1177541623.jpg",
       icon: Bone,
       color: "sky"
     },
     {
       title: "Fisioterapia Neurofuncional",
       description: "Reabilitação domiciliar focada em pacientes pós-AVC, Parkinson e outras condições neurológicas complexas.",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1200",
+      image: "https://clinicamotricita.com.br/motri/images/treinodemarchacomsuspensoparcialdepeso.jpg",
       icon: Brain,
       color: "emerald"
     },
     {
       title: "Fisioterapia Geriátrica",
       description: "Cuidado dedicado à terceira idade no ambiente domiciliar, focando em mobilidade, equilíbrio e independência.",
-      image: "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=1200",
+      image: "https://clinicaportal.com.br/wp-content/uploads/2021/02/Fisioterapia-para-idosos-como-a-pratica-ajuda-na-reabilitacao-e-autonomia-1024x683.jpg.webp",
       icon: Heart,
       color: "orange"
     },
@@ -106,18 +107,22 @@ export default function Home() {
     {
       title: "Fisioterapia Respiratória",
       description: "Melhora da capacidade pulmonar e tratamento de condições como DPOC e asma, com toda a segurança do seu lar.",
-      image: "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=1200",
+      image: "https://i0.wp.com/www.clinicadospes.com.br/wp-content/uploads/2021/08/fisioterapia-respiratoria-scaled.jpg?fit=2560%2C1707&ssl=1",
       icon: Wind,
       color: "blue"
     },
     {
       title: "Fisioterapia Esportiva",
       description: "Prevenção e tratamento de lesões para atletas com atendimento personalizado e focado no retorno rápido.",
-      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=1200",
+      image: "https://blogfisioterapia.com.br/wp-content/uploads/2023/09/Fisioterapia-esportiva.png",
       icon: Zap,
       color: "amber"
     }
   ];
+
+  useEffect(() => {
+    document.title = "FisioCareHub - Conectando Fisioterapeutas e Pacientes";
+  }, []);
 
   useEffect(() => {
     // Only redirect if at the root path and logged in
@@ -170,7 +175,7 @@ export default function Home() {
         .from('perfis')
         .select('*')
         .eq('tipo_usuario', 'fisioterapeuta')
-        .in('status_aprovacao', ['aprovado', 'pendente']);
+        .eq('status_aprovacao', 'aprovado');
 
       // Filtro por Nome ou E-mail (ilike para ignorar case)
       if (nameQuery) {
@@ -205,68 +210,11 @@ export default function Home() {
         }));
         setProfessionals(mappedData);
       } else {
-        // Sample data for demo if DB is empty
-        const samplePros: Professional[] = [
-          {
-            id: '1',
-            name: 'Dra. Ana Silva',
-            spec: 'Ortopedia',
-            fullSpec: 'Fisioterapia Traumato-Ortopédica',
-            img: 'https://images.unsplash.com/photo-1559839734-2b71f1536783?auto=format&fit=crop&q=80&w=300&h=300',
-            rating: 5.0,
-            reviews: 42,
-            bio: 'Especialista em reabilitação de coluna e membros inferiores com mais de 10 anos de experiência.',
-            location: 'São Paulo, SP'
-          },
-          {
-            id: '2',
-            name: 'Dr. Lucas Santos',
-            spec: 'Neurofuncional',
-            fullSpec: 'Fisioterapia Neurofuncional',
-            img: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300&h=300',
-            rating: 4.9,
-            reviews: 38,
-            bio: 'Focado na recuperação de pacientes pós-AVC e doenças degenerativas com atendimento humanizado.',
-            location: 'Rio de Janeiro, RJ'
-          },
-          {
-            id: '3',
-            name: 'Dra. Juliana Costa',
-            spec: 'Pediátrica',
-            fullSpec: 'Fisioterapia Pediátrica',
-            img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=300&h=300',
-            rating: 5.0,
-            reviews: 25,
-            bio: 'Atendimento lúdico para crianças com atraso no desenvolvimento motor e condições congênitas.',
-            location: 'Belo Horizonte, MG'
-          },
-          {
-            id: '4',
-            name: 'Dr. Ricardo Oliveira',
-            spec: 'Esportiva',
-            fullSpec: 'Fisioterapia Esportiva',
-            img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300&h=300',
-            rating: 4.8,
-            reviews: 56,
-            bio: 'Especialista em retorno ao esporte e prevenção de lesões para atletas amadores e profissionais.',
-            location: 'Curitiba, PR'
-          },
-          {
-            id: '5',
-            name: 'Dra. Carla Mendes',
-            spec: 'Gerontologia',
-            fullSpec: 'Fisioterapia Geriátrica',
-            img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300&h=300',
-            rating: 5.0,
-            reviews: 31,
-            bio: 'Dedicada à manutenção da autonomia e prevenção de quedas em idosos no ambiente domiciliar.',
-            location: 'Porto Alegre, RS'
-          }
-        ];
-        setProfessionals(samplePros);
+        setProfessionals([]);
       }
     } catch (error) {
       console.error('Erro ao buscar profissionais:', error);
+      setProfessionals([]);
     } finally {
       setLoading(false);
     }
@@ -286,195 +234,262 @@ export default function Home() {
   return (
     <div className="bg-slate-950 transition-colors duration-300 selection:bg-blue-500/30">
       {/* Hero Section - Home Care Focus */}
-      <section className="relative min-h-[95vh] flex flex-col lg:flex-row overflow-hidden">
-        {/* Advanced Background with Animated Gradients */}
+      <section className="relative min-h-[90vh] flex flex-col lg:flex-row overflow-hidden">
+        {/* Advanced Background with Subtle Animated Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(11,17,32,1),rgba(2,6,23,1))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(11,17,32,1),rgba(2,6,23,1))]" />
+          
+          {/* Animated Blobs - Slower and more subtle */}
           <motion.div 
             animate={{ 
-              scale: [1, 1.2, 1],
-              opacity: [0.15, 0.25, 0.15],
-              x: [0, 50, 0],
-              y: [0, -30, 0]
-            }}
-            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-[10%] -left-[5%] w-[70%] h-[70%] bg-blue-600/30 rounded-full blur-[120px]" 
-          />
-          <motion.div 
-            animate={{ 
-              scale: [1, 1.1, 1],
+              scale: [1, 1.3, 1],
               opacity: [0.1, 0.2, 0.1],
-              x: [0, -40, 0],
-              y: [0, 40, 0]
+              rotate: [0, 90, 0],
+              x: [0, 30, 0],
+              y: [0, -40, 0]
             }}
-            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[20%] right-[0%] w-[60%] h-[60%] bg-sky-500/20 rounded-full blur-[140px]" 
+            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+            className="absolute -top-[10%] -left-[5%] w-[80%] h-[80%] bg-blue-600/20 rounded-full blur-[140px]" 
           />
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
+          <motion.div 
+            animate={{ 
+              scale: [1.2, 1, 1.2],
+              opacity: [0.05, 0.15, 0.05],
+              rotate: [0, -60, 0],
+              x: [0, -50, 0],
+              y: [0, 50, 0]
+            }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[30%] right-[0%] w-[70%] h-[70%] bg-sky-500/15 rounded-full blur-[160px]" 
+          />
+          
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.04] mix-blend-overlay" />
         </div>
 
         <div className="flex-1 p-6 sm:p-10 lg:p-24 flex flex-col justify-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="space-y-10"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.15,
+                  delayChildren: 0.2
+                }
+              }
+            }}
+            className="space-y-12 max-w-5xl mx-auto lg:mx-0 text-center lg:text-left"
           >
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl"
+              variants={{
+                hidden: { opacity: 0, scale: 0.8, y: 20 },
+                visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+              }}
+              className="inline-flex items-center gap-3 px-5 py-2.5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full shadow-2xl mx-auto lg:mx-0"
             >
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">Plataforma Premium</span>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
+                <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">Cuidado Domiciliar Premium</span>
               </div>
               <div className="w-px h-4 bg-white/10 mx-1" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fisioterapia 4.0</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fisioterapia Especializada</span>
             </motion.div>
             
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-display font-black text-white leading-[0.85] tracking-tighter text-center">
-              CONECTANDO CUIDADO ESPECIALIZADO <br />
-              <span className="bg-gradient-to-r from-blue-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent italic">
-                E PROFISSIONALISMO DE ELITE
-              </span>
-            </h1>
-            
-            <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium opacity-80 text-center">
-              A plataforma inteligente que une pacientes em busca de reabilitação domiciliar a fisioterapeutas que buscam gestão eficiente e novos pacientes. Tecnologia e cuidado humanizado em um só lugar.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-              <motion.div
-                whileHover={{ scale: 1.02, y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full sm:w-auto"
-              >
-                <Link
-                  to={user ? "/buscar-fisio" : "/register"}
-                  onClick={() => !user && localStorage.setItem('pending_role', 'paciente')}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 bg-blue-600 text-white rounded-[2rem] font-black text-lg shadow-[0_20px_50px_-15px_rgba(37,99,235,0.5)] hover:bg-blue-500 transition-all group"
+            <div className="space-y-6">
+              <h1 className="text-5xl sm:text-7xl lg:text-[8rem] font-display font-black text-white leading-[0.95] tracking-tighter">
+                <motion.span 
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  className="block"
                 >
-                  <HomeIcon size={22} /> Encontrar Fisioterapeuta
-                </Link>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.02, y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full sm:w-auto"
+                  Saúde e
+                </motion.span>
+                <motion.span 
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  className="block bg-gradient-to-r from-blue-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent italic"
+                >
+                  Bem-estar
+                </motion.span>
+                <motion.span 
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  className="block"
+                >
+                  no seu lar.
+                </motion.span>
+              </h1>
+              
+              <motion.p 
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+                className="text-lg md:text-2xl text-slate-400 max-w-2xl lg:mx-0 mx-auto leading-relaxed font-medium opacity-90"
               >
-                <Link
-                  to="/register"
-                  onClick={() => localStorage.setItem('pending_role', 'fisioterapeuta')}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 bg-transparent border-2 border-white/30 text-white rounded-[2rem] font-black text-lg hover:bg-white/10 transition-all group"
+                Conectamos os melhores especialistas em reabilitação domiciliar a pacientes que buscam cuidado personalizado, tecnologia e resultados reais.
+              </motion.p>
+            </div>
+            
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 }
+              }}
+              className="flex flex-col sm:flex-row items-center gap-6 pt-6"
+            >
+              <Link
+                to={user ? "/buscar-fisio" : "/register"}
+                onClick={() => !user && localStorage.setItem('pending_role', 'paciente')}
+                className="group relative w-full sm:w-auto"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="relative z-10 inline-flex items-center justify-center gap-3 px-10 py-5 bg-blue-600 text-white rounded-[2rem] font-black text-lg shadow-[0_20px_50px_-15px_rgba(37,99,235,0.4)] hover:bg-blue-500 transition-all duration-300"
+                >
+                  <Search size={22} className="group-hover:scale-110 transition-transform" /> 
+                  Encontrar Fisioterapeuta
+                </motion.div>
+                <div className="absolute inset-0 bg-blue-400/20 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+
+              <Link
+                to="/register"
+                onClick={() => localStorage.setItem('pending_role', 'fisioterapeuta')}
+                className="group w-full sm:w-auto"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -4, backgroundColor: "rgba(255,255,255,0.05)" }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-transparent border-2 border-white/20 text-white rounded-[2rem] font-black text-lg hover:border-white/40 transition-all duration-300"
                 >
                   <Stethoscope size={22} /> Sou Fisioterapeuta
-                </Link>
-              </motion.div>
-            </div>
-              
-              <div className="flex items-center gap-4 px-6 py-4 bg-white/5 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-2xl">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map((i) => (
-                    <img 
-                      key={i}
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`}
-                      className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800"
-                      alt="User"
-                    />
-                  ))}
-                </div>
-                <div>
-                  <p className="text-xs font-black text-white">+2k Pacientes Felizes</p>
-                  <div className="flex items-center gap-1 text-amber-400">
-                    {[1, 2, 3, 4, 5].map(i => <Star key={i} size={10} fill="currentColor" />)}
-                  </div>
-                </div>
+                </motion.div>
+              </Link>
+            </motion.div>
+
+            {/* Social Proof / Stats */}
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1 }
+              }}
+              className="flex flex-wrap justify-center lg:justify-start gap-8 pt-10 border-t border-white/10"
+            >
+              <div className="space-y-1">
+                <p className="text-2xl font-black text-white">500+</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Especialistas</p>
               </div>
-            
-            <div className="pt-12 grid grid-cols-2 sm:grid-cols-4 gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-              <div className="flex items-center gap-2 font-black text-white text-sm tracking-tighter">
-                <ShieldCheck className="text-blue-500" /> CREFITO OK
+              <div className="space-y-1">
+                <p className="text-2xl font-black text-white">10k+</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Atendimentos</p>
               </div>
-              <div className="flex items-center gap-2 font-black text-white text-sm tracking-tighter">
-                <Activity className="text-blue-500" /> MONITORAMENTO
+              <div className="space-y-1">
+                <p className="text-2xl font-black text-white">4.9/5</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Avaliação Média</p>
               </div>
-              <div className="flex items-center gap-2 font-black text-white text-sm tracking-tighter">
-                <Users className="text-blue-500" /> +500 FISIOS
-              </div>
-              <div className="flex items-center gap-2 font-black text-white text-sm tracking-tighter">
-                <Heart className="text-blue-500" /> HUMANIZADO
-              </div>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
 
-        <div className="flex-1 relative min-h-[60vh] lg:min-h-full">
+        <div className="flex-1 relative min-h-[50vh] lg:min-h-full">
           <motion.div 
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0"
           >
+            {/* Using an abstract architectural medical background instead of humans */}
             <img 
-              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=2070" 
+              src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=2070" 
               className="w-full h-full object-cover"
-              alt="Physiotherapy session"
+              alt="Medical background"
               referrerPolicy="no-referrer"
+              loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent lg:block hidden" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent lg:block hidden" />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
             
+            {/* Subtle floating tech elements */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+               <motion.div
+                 animate={{ 
+                   y: [0, -30, 0],
+                   opacity: [0.2, 0.5, 0.2] 
+                 }}
+                 transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                 className="absolute top-1/4 right-1/4 w-32 h-32 border border-blue-500/20 rounded-full"
+               />
+               <motion.div
+                 animate={{ 
+                   y: [20, -10, 20],
+                   opacity: [0.1, 0.3, 0.1] 
+                 }}
+                 transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                 className="absolute bottom-1/3 right-1/3 w-48 h-48 border border-sky-500/10 rounded-full"
+               />
+            </div>
+
             {/* Floating Glass UI Element */}
             <motion.div
               animate={{ y: [0, -20, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-20 right-10 hidden lg:block p-6 bg-white/10 backdrop-blur-3xl border border-white/20 rounded-[2.5rem] shadow-2xl z-20 w-64"
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-20 right-10 hidden xl:block p-8 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] shadow-2xl z-20 w-72"
             >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400">
-                  <Activity size={24} />
+              <div className="flex items-center gap-5 mb-6">
+                <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400">
+                  <Activity size={28} />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-white uppercase tracking-widest">Status Vital</p>
-                  <p className="text-lg font-black text-emerald-400">Estável</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Status Sistema</p>
+                  <p className="text-xl font-black text-white">Ativo</p>
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+              <div className="space-y-3">
+                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: "85%" }}
-                    transition={{ duration: 2, delay: 1 }}
-                    className="h-full bg-emerald-500" 
+                    animate={{ width: "92%" }}
+                    transition={{ duration: 2.5, delay: 1 }}
+                    className="h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
                   />
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 text-right">85% Recuperação</p>
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Disponibilidade</p>
+                  <p className="text-xs font-black text-blue-400">92%</p>
+                </div>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Floating Accessibility Card */}
+          {/* Floating Feature Card */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.8 }}
-            className="absolute bottom-16 left-6 right-6 lg:left-auto lg:right-12 lg:w-[30rem] p-10 bg-slate-900/60 backdrop-blur-3xl border border-white/10 rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] z-10"
+            transition={{ delay: 0.8, duration: 1 }}
+            className="absolute bottom-16 left-6 right-6 lg:left-auto lg:right-12 lg:w-[32rem] p-12 bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] z-10"
           >
-            <div className="flex items-start gap-6 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl flex-shrink-0 -rotate-6">
-                <Heart size={32} />
+            <div className="flex items-center gap-7 mb-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl flex-shrink-0 -rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                <ShieldCheck size={36} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-2">Cuidado Domiciliar</p>
-                <p className="text-3xl font-black text-white leading-none tracking-tight">Fisioterapia VIP</p>
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] mb-2">Plataforma Segura</p>
+                <p className="text-4xl font-black text-white leading-none tracking-tighter">Qualidade VIP</p>
               </div>
             </div>
-            <p className="text-lg text-slate-400 leading-relaxed font-medium">
-              Atenção total e personalizada para idosos e pós-operatórios. Qualidade de clínica com a conveniência e segurança do seu domicílio.
+            <p className="text-xl text-slate-400 leading-relaxed font-medium">
+              Gestão completa de prontuários, agendas e pagamentos. Tudo pensado para que o foco seja 100% na reabilitação do paciente.
             </p>
           </motion.div>
         </div>
@@ -577,6 +592,7 @@ export default function Home() {
                   className="w-full h-full object-cover"
                   alt={specialtySlides[currentSlide].title}
                   referrerPolicy="no-referrer"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
                 
@@ -695,13 +711,13 @@ export default function Home() {
             {/* Search and Filter Bar - Compact SaaS Style */}
             <div className="flex-1 max-w-2xl flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors" size={18} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors pointer-events-none" size={18} />
                 <input 
                   type="text" 
                   placeholder="Buscar por nome..."
                   value={nameQuery}
                   onChange={(e) => setNameQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-white placeholder:text-slate-500"
+                  className="w-full !pl-10 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-white placeholder:text-slate-500"
                 />
               </div>
               <button 
@@ -715,51 +731,97 @@ export default function Home() {
           
           <div className="relative group">
             {professionals.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {professionals.slice(0, 8).map((pro, i) => (
-                    <motion.div
-                      key={pro.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="group/card relative bg-white/5 backdrop-blur-xl p-8 rounded-[3rem] border border-white/10 hover:bg-white/10 transition-all duration-500 flex flex-col items-center text-center"
-                    >
-                      <div className="relative mb-8">
-                        <div className="absolute inset-0 bg-blue-500/20 rounded-[2.5rem] blur-2xl group-hover/card:bg-blue-500/40 transition-colors" />
-                        <img 
-                          src={pro.img} 
-                          className="w-32 h-32 rounded-[2.5rem] border-4 border-white/10 object-cover shadow-2xl relative z-10 grayscale group-hover/card:grayscale-0 transition-all duration-500"
-                          alt={pro.name}
-                        />
-                        <div className="absolute -bottom-2 -right-2 bg-slate-900 rounded-full p-2.5 shadow-2xl border border-white/10 z-20">
-                          <div className="ping-online">
-                            <span className="ping-online-circle"></span>
-                            <span className="ping-online-dot"></span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 text-amber-400 mb-3">
-                        <Star size={14} fill="currentColor" />
-                        <span className="text-sm font-black text-white">{pro.rating}</span>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">({pro.reviews} reviews)</span>
-                      </div>
-                      
-                      <h4 className="text-xl font-black text-white mb-1 tracking-tight">{pro.name}</h4>
-                      <p className="text-blue-400 font-black text-[10px] uppercase tracking-[0.2em] mb-6">{pro.fullSpec}</p>
-                      
-                      <Link
-                        to={`/physio/${pro.id}`}
-                        className="w-full py-4 bg-white/5 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-blue-600 transition-all border border-white/10 flex items-center justify-center gap-2 mt-auto group/btn"
+              <div className="relative">
+                {/* Navigation Buttons */}
+                <div className="absolute -left-4 lg:-left-12 top-1/2 -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => setProSlideIndex(prev => Math.max(0, prev - 1))}
+                    disabled={proSlideIndex === 0}
+                    className="w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-blue-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                </div>
+                
+                <div className="absolute -right-4 lg:-right-12 top-1/2 -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => setProSlideIndex(prev => Math.min(professionals.length - itemsVisible, prev + 1))}
+                    disabled={proSlideIndex >= professionals.length - itemsVisible}
+                    className="w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-blue-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </div>
+
+                <div className="overflow-hidden">
+                  <motion.div 
+                    initial={false}
+                    animate={{ x: `-${proSlideIndex * (100 / itemsVisible)}%` }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="flex"
+                  >
+                    {professionals.map((pro) => (
+                      <div
+                        key={pro.id}
+                        className={cn(
+                          "flex-shrink-0 px-4 transition-all duration-500",
+                          itemsVisible === 1 ? "w-full" : itemsVisible === 2 ? "w-1/2" : "w-1/4"
+                        )}
                       >
-                        Ver Perfil <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-                      </Link>
-                    </motion.div>
+                        <motion.div
+                          className="group/card relative bg-white/5 backdrop-blur-xl p-8 rounded-[3.5rem] border border-white/10 hover:bg-white/10 transition-all duration-500 flex flex-col items-center text-center h-[520px] shadow-2xl"
+                        >
+                          <div className="relative mb-8">
+                            <div className="absolute inset-0 bg-blue-500/20 rounded-[2.5rem] blur-2xl group-hover/card:bg-blue-500/40 transition-colors" />
+                            <img 
+                              src={pro.img} 
+                              className="w-32 h-32 rounded-[2.5rem] border-4 border-white/10 object-cover shadow-2xl relative z-10 grayscale group-hover/card:grayscale-0 transition-all duration-500"
+                              alt={pro.name}
+                              loading="lazy"
+                            />
+                            <div className="absolute -bottom-2 -right-2 bg-slate-900 rounded-full p-2.5 shadow-2xl border border-white/10 z-20">
+                              <div className="ping-online">
+                                <span className="ping-online-circle"></span>
+                                <span className="ping-online-dot"></span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-1.5 text-amber-400 mb-3">
+                            <Star size={14} fill="currentColor" />
+                            <span className="text-sm font-black text-white">{pro.rating}</span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">({pro.reviews} reviews)</span>
+                          </div>
+                          
+                          <h4 className="text-xl font-black text-white mb-1 tracking-tight">{pro.name}</h4>
+                          <p className="text-blue-400 font-black text-[10px] uppercase tracking-[0.2em] mb-6">{pro.fullSpec}</p>
+                          
+                          <Link
+                            to={`/physio/${pro.id}`}
+                            className="w-full py-4 bg-white/5 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-blue-600 transition-all border border-white/10 flex items-center justify-center gap-2 mt-auto group/btn"
+                          >
+                            Ver Perfil <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                          </Link>
+                        </motion.div>
+                      </div>
+                    ))}
+                  </motion.div>
+                </div>
+                
+                {/* Pagination Dots */}
+                <div className="flex justify-center gap-2 mt-12">
+                  {Array.from({ length: Math.max(0, professionals.length - itemsVisible + 1) }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setProSlideIndex(i)}
+                      className={cn(
+                        "h-1.5 transition-all duration-300 rounded-full",
+                        proSlideIndex === i ? "w-8 bg-blue-600" : "w-1.5 bg-white/20 hover:bg-white/40"
+                      )}
+                    />
                   ))}
                 </div>
-              </>
+              </div>
             ) : (
               <div className="py-32 text-center bg-white/5 rounded-[4rem] border border-white/5">
                 <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-600">
@@ -772,6 +834,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* New Physio Highlight Section */}
+      <PhysioHighlight />
 
       {/* CTA Section - High Impact SaaS Style */}
       <section className="py-32 px-6">
